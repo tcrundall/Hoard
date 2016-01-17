@@ -3,7 +3,7 @@ include ../Makefile.inc
 TARGET = threadtest
 
 $(TARGET): threadtest.cpp
-	$(CXX) -std=c++11 $(CXXFLAGS) threadtest.cpp -o $(TARGET) -lpthread
+	$(CXX) -std=c++11 $(CXXFLAGS) threadtest.cpp -o $(TARGET) -lpthread -pthread
 
 clean:
 	rm -f $(TARGET)

@@ -42,16 +42,17 @@ using namespace std;
 #include "fred.h"
 #include "timer.h"
 
-// void ***allocationTracker
+void *allocationTracker[20][1000];
 
 // This class just holds arguments to each thread.
 class workerArg {
 public:
   workerArg() {}
-  workerArg (int objSize, int repetitions, int iterations)
+  workerArg (int objSize, int repetitions, int iterations, int id)
     : _objSize (objSize),
       _iterations (iterations),
-      _repetitions (repetitions)
+      _repetitions (repetitions),
+      _id (id)
   {}
 
   int _objSize;
@@ -73,12 +74,13 @@ extern "C" void * worker (void * arg)
   //   then free it.
   workerArg * w = (workerArg *) arg;
   workerArg w1 = *w;
+  // fputs("Hello World full of errors!\n", stderr);
+  // printf("Hello");
   for (int i = 0; i < w1._iterations; i++) {
     // Allocate the object.
     char * obj = new char[w1._objSize];
-
-    // array[thread] = 
-    //    printf ("obj = %p\n", obj);
+    // printf("thread %d: obj = %p\n", w1._id, obj);
+    allocationTracker[w1._id][i] = obj;
     // Write into it a bunch of times.
     for (int j = 0; j < w1._repetitions; j++) {
       for (int k = 0; k < w1._objSize; k++) {
@@ -86,7 +88,7 @@ extern "C" void * worker (void * arg)
 	volatile double d = 1.0;
 	d = d * d + d * d;
 #else
-	obj[k] = (char) k;
+	obj[k] = (char) w1._id;
 	volatile char ch = obj[k];
 	ch++;
 #endif
@@ -129,7 +131,7 @@ int main (int argc, char * argv[])
   workerArg * w = new workerArg[nthreads];
     
   for (i = 0; i < nthreads; i++) {
-    w[i] = workerArg (objSize, repetitions / nthreads, iterations);
+    w[i] = workerArg (objSize, repetitions / nthreads, iterations, i);
     threads[i].create (&worker, (void *) &w[i]);
   }
   for (i = 0; i < nthreads; i++) {
@@ -139,6 +141,15 @@ int main (int argc, char * argv[])
 
   delete [] threads;
   delete [] w;
+  
+  printf("iterations\tthread1\t\tthread2\t\tthread3\t\tthread4\t\tthread5\t\tthread6\t\tthread7\t\tthread8\n"); 
+  for (int j = 0; j < iterations; j++) {
+    printf("%d:\t\t", j);
+    for (i = 0; i < nthreads; i++) {
+      printf("%p\t", allocationTracker[i][j]);
+    }
+    printf("\n");
+  }
 
   cout << "Time elapsed = " << (double) t << " seconds." << endl;
 }
